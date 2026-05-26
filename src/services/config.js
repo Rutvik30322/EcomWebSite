@@ -1,4 +1,4 @@
-const PRIMARY_API   = 'http://172.20.10.5:5001/api';
+const PRIMARY_API   = 'https://ecombackend-krq1.onrender.com/api';
 const FALLBACK_API  = 'http://localhost:5001/api';
 
 /**

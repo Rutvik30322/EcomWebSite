@@ -1,165 +1,226 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft, Star, Heart, Check, Truck, Shield } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Star, 
+  Heart, 
+  Check, 
+  Truck, 
+  ShieldCheck, 
+  Loader2, 
+  Minus, 
+  Plus, 
+  ShoppingCart,
+  Share2
+} from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { useCart } from '../context/CartContext';
+import { toast } from 'react-hot-toast';
 import './ProductDetails.css';
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        // GET /api/products/:id
         const res = await apiClient.get(`/products/${id}`);
-        const data = res.data.product || res.data;
-        setProduct(data);
+        // Backend: { success, data: { product: {...} } }
+        setProduct(res.data?.data?.product || res.data?.product || res.data);
       } catch (err) {
-        console.warn("API product fetch failed, trying dummy products fallback...", err);
-        // Fallback to dummy data mapping if ID is a dummy one (d1, d2, etc.)
-        import('./Products').then(module => {
-          const dummyHit = module.DUMMY_PRODUCTS?.find(p => p._id === id);
-          if (dummyHit) {
-             setProduct(dummyHit);
-          } else {
-             setError("Unable to locate this product.");
-          }
-        }).catch(() => setError("Unable to locate this product."));
+        console.error("Fetch failed", err);
       } finally {
         setLoading(false);
       }
     };
-
-    if (id) {
-      fetchProduct();
-    }
+    fetchProduct();
   }, [id]);
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    toast.success(`${product.name} added to cart`, {
+      icon: '🛍️',
+      style: { background: '#0f172a', color: '#fff' }
+    });
+  };
 
   if (loading) {
     return (
-      <div className="pd-loader container">
+      <div className="pd-loader flex-center section-padding">
         <Loader2 className="spinner" size={64} />
       </div>
     );
   }
 
-  if (error || !product) {
+  if (!product) {
     return (
-      <div className="pd-error container">
-        <h2>{error || "Product not found"}</h2>
-        <Link to="/products" className="btn btn-outline">Back to Shop</Link>
+      <div className="pd-error container section-padding flex-center flex-column">
+        <h2>Product not found</h2>
+        <Link to="/products" className="btn btn-primary mt-4">Back to Shop</Link>
       </div>
     );
   }
 
-  // Graceful fallback for image arrays
   const images = (product.images && product.images.length > 0) 
     ? product.images 
     : [product.image || 'https://via.placeholder.com/600?text=No+Image'];
 
-  const inStock = product.stock > 0 || product.inStock;
-
   return (
-    <div className="product-details-page container">
-      <Link to="/products" className="back-link">
-        <ArrowLeft size={18} />
-        Back to Products
-      </Link>
+    <div className="product-details-page section-padding">
+      <div className="container">
+        <Link to="/products" className="back-link">
+          <ArrowLeft size={18} /> Back to Products
+        </Link>
 
-      <div className="pd-grid">
-        
-        {/* Left: Image Gallery */}
-        <div className="pd-gallery">
-          <div className="pd-main-image-container">
-            <img src={images[activeImage]} alt={product.name} className="pd-main-image" />
-          </div>
-          {images.length > 1 && (
+        <div className="pd-grid">
+          {/* Left: Gallery */}
+          <div className="pd-gallery">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="pd-main-image-wrapper glass"
+            >
+              <AnimatePresence mode="wait">
+                <motion.img 
+                  key={activeImage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  src={images[activeImage]} 
+                  alt={product.name} 
+                  className="pd-main-image" 
+                />
+              </AnimatePresence>
+            </motion.div>
+            
             <div className="pd-thumbnails">
               {images.map((img, idx) => (
-                <div 
+                <motion.div 
                   key={idx} 
-                  className={`pd-thumb ${activeImage === idx ? 'active' : ''}`}
+                  whileHover={{ y: -5 }}
+                  className={`pd-thumb glass ${activeImage === idx ? 'active' : ''}`}
                   onClick={() => setActiveImage(idx)}
                 >
-                  <img src={img} alt={`Thumbnail ${idx}`} />
-                </div>
+                  <img src={img} alt={`Thumb ${idx}`} />
+                </motion.div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Right: Info & Actions */}
-        <div className="pd-info">
-          
-          <div className="pd-header">
-            <span className="pd-category">{product.category}</span>
-            <h1 className="pd-title">{product.name}</h1>
-            
-            <div className="pd-meta">
-              <div className="stars">
-                {[1,2,3,4,5].map(star => (
-                   <Star key={star} size={16} className={star <= (product.rating || 5) ? 'star-filled' : 'star-empty'} />
-                ))}
+          {/* Right: Info */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="pd-info"
+          >
+            <div className="pd-header">
+              <div className="pd-tag-row">
+                <span className="pd-category-tag">{product.category}</span>
+                {product.isNew && <span className="pd-new-tag">New Season</span>}
+                {product.weight && <span className="pd-weight-tag">{product.weight}</span>}
               </div>
-              <span className="pd-reviews">({product.reviews || Math.floor(Math.random()*100)+10} Reviews)</span>
-              {product.brand && <span className="pd-brand">Brand: <strong>{product.brand}</strong></span>}
-            </div>
-          </div>
-
-          <div className="pd-price-row">
-            <span className="pd-price">${Number(product.price).toFixed(2)}</span>
-            {product.originalPrice && <span className="pd-old-price">${Number(product.originalPrice).toFixed(2)}</span>}
-          </div>
-
-          <p className="pd-description">
-            {product.description || "No description provided for this premium item."}
-          </p>
-
-          <div className="pd-stock-status">
-            {inStock ? (
-              <span className="stock in-stock"><Check size={18} /> In Stock ({product.stock || '10+'} available)</span>
-            ) : (
-              <span className="stock out-of-stock">Out of Stock</span>
-            )}
-          </div>
-
-          <div className="pd-actions">
-            <button 
-              className="btn btn-primary btn-add-cart" 
-              disabled={!inStock}
-              onClick={() => addToCart(product)}
-            >
-              Add to Cart
-            </button>
-            <button className="btn btn-outline btn-wishlist">
-              <Heart size={20} />
-            </button>
-          </div>
-
-          <div className="pd-perks">
-            <div className="perk">
-              <Truck size={20} className="perk-icon" />
-              <div>
-                <strong>Free Delivery</strong>
-                <p>On orders over $50</p>
+              <h1 className="pd-title">{product.name}</h1>
+              <div className="pd-rating-row">
+                <div className="pd-stars">
+                  <Star size={16} fill="var(--warning)" color="var(--warning)" />
+                  <span>{product.rating || '4.9'}</span>
+                </div>
+                <span className="pd-review-count">({product.numReviews || 86} customer reviews)</span>
               </div>
             </div>
-            <div className="perk">
-              <Shield size={20} className="perk-icon" />
-              <div>
-                <strong>1 Year Warranty</strong>
-                <p>Guaranteed reliability</p>
+
+            <div className="pd-price-row">
+              <span className="pd-current-price">₹{Number(product.price).toLocaleString('en-IN')}</span>
+              {product.actualPrice > 0 && (
+                <span className="pd-old-price">₹{Number(product.actualPrice).toLocaleString('en-IN')}</span>
+              )}
+              {product.discountPercent > 0 && (
+                <span className="pd-discount-badge">{product.discountPercent}% OFF</span>
+              )}
+            </div>
+
+            <p className="pd-description">{product.description || "Indulge in pure excellence with this masterfully crafted piece, designed for those who value both aesthetic brilliance and functional superiority."}</p>
+
+            {/* Chocolate Specifics */}
+            <div className="pd-chocolate-specs glass">
+              {product.brand && (
+                <div className="spec-item">
+                  <span className="spec-label">Brand:</span>
+                  <span className="spec-value">{product.brand}</span>
+                </div>
+              )}
+              {product.ingredients?.length > 0 && (
+                <div className="spec-item">
+                  <span className="spec-label">Ingredients:</span>
+                  <span className="spec-value">{product.ingredients.join(', ')}</span>
+                </div>
+              )}
+              {product.nutrition && (
+                <div className="spec-item">
+                  <span className="spec-label">Nutrition:</span>
+                  <span className="spec-value">{product.nutrition}</span>
+                </div>
+              )}
+              {product.allergenWarning && (
+                <div className="spec-item warning">
+                  <span className="spec-label">Allergen Warning:</span>
+                  <span className="spec-value">{product.allergenWarning}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pd-purchase-section">
+
+              <div className="pd-quantity-row">
+                <span className="label">Quantity</span>
+                <div className="qty-picker glass">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))}><Minus size={18} /></button>
+                  <span>{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)}><Plus size={18} /></button>
+                </div>
+              </div>
+
+              <div className="pd-main-actions">
+                <button 
+                  className="btn btn-accent btn-add-cart" 
+                  onClick={handleAddToCart}
+                >
+                  <ShoppingCart size={20} /> Add to Cart
+                </button>
+                <button className="btn btn-outline btn-icon-only">
+                  <Heart size={20} />
+                </button>
+                <button className="btn btn-outline btn-icon-only">
+                  <Share2 size={20} />
+                </button>
               </div>
             </div>
-          </div>
 
+            <div className="pd-benefits-grid">
+              <div className="pd-benefit-card glass">
+                <Truck size={24} className="benefit-icon" />
+                <div>
+                  <h4>Free Shipping</h4>
+                  <p>Express 3-day delivery</p>
+                </div>
+              </div>
+              <div className="pd-benefit-card glass">
+                <ShieldCheck size={24} className="benefit-icon" />
+                <div>
+                  <h4>Genuine Product</h4>
+                  <p>100% authentic guarantee</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
@@ -167,3 +228,4 @@ const ProductDetails = () => {
 };
 
 export default ProductDetails;
+

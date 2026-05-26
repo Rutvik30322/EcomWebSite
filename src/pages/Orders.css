@@ -1,0 +1,162 @@
+.orders-page {
+  max-width: 1000px;
+}
+
+.orders-header {
+  margin-bottom: 3rem;
+}
+
+.orders-header h1 {
+  font-size: 2.5rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.orders-header p {
+  color: var(--text-muted);
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.order-card {
+  padding: 1.5rem 2rem;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
+.order-main-info {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1.5fr 1fr auto;
+  gap: 2rem;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.order-id-group, .order-date-group, .order-total-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.value {
+  font-weight: 700;
+  color: var(--primary);
+  font-family: 'Outfit', sans-serif;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* Matches backend orderStatus enum: Pending, Processing, Shipped, Delivered, Cancelled */
+.status-badge.status-pending {
+  color: #92400e;
+  background: rgba(251, 191, 36, 0.15);
+}
+.status-badge.status-processing {
+  color: #1e40af;
+  background: rgba(59, 130, 246, 0.12);
+}
+.status-badge.status-shipped {
+  color: #6d28d9;
+  background: rgba(139, 92, 246, 0.12);
+}
+.status-badge.status-delivered {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.12);
+}
+.status-badge.status-cancelled {
+  color: #9f1239;
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.status-delivered { color: #10b981; }
+.status-shipped   { color: #8b5cf6; }
+.status-processing { color: #3b82f6; }
+.status-pending   { color: #f59e0b; }
+.status-cancelled { color: #ef4444; }
+
+.chevron {
+  color: var(--text-muted);
+}
+
+
+.order-preview-items {
+  display: flex;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  align-items: center;
+}
+
+.preview-item {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--bg-main);
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.more-items {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Empty State */
+.orders-empty {
+  text-align: center;
+}
+
+.empty-icon {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 2rem;
+  color: var(--text-muted);
+}
+
+.orders-loading {
+  min-height: 400px;
+}
+
+@media (max-width: 768px) {
+  .order-main-info {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .order-status-group, .order-total-group {
+    grid-column: span 1;
+  }
+  .chevron {
+    display: none;
+  }
+}
